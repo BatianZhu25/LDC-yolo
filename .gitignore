@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.coverage
+.DS_Store
+
+logs/
+runs/
+outputs/
+weights/
+datasets/
+*.pt
+*.pth
+*.onnx
+*.engine

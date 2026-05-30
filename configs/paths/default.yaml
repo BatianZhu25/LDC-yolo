@@ -1,0 +1,4 @@
+root_dir: .
+data_dir: ./datasets
+log_dir: ./logs
+output_dir: ./outputs

@@ -1,0 +1,7 @@
+model: runs/train/mkl_yolo_s/weights/best.pt
+data: configs/data/visdrone.yaml
+imgsz: 640
+batch: 32
+device: 0
+split: val
+plots: false

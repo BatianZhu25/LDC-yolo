@@ -1,0 +1,41 @@
+# MKL-YOLO model configuration.
+#
+# The architecture uses P2/P3/P4 detection heads for dense small-object
+# detection in aerial imagery.
+
+nc: 80
+scale: s
+scales:
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+
+backbone:
+  - [-1, 1, ConvStem, [64, 3, 2, 1.0]]
+  - [-1, 1, GhostBottleneckV2, [128, 3, 2]]
+  - [-1, 3, C2f_E, [128, True, 1, 0.5, True]]
+  - [-1, 1, GhostBottleneckV2, [256, 3, 2]]
+  - [-1, 6, C2f, [256, True]]
+  - [-1, 1, GhostBottleneckV2, [512, 3, 2]]
+  - [-1, 6, C2f_G, [512, True, [1, 3, 3, 5, 5, 7, 7, 9, 9, 11]]]
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 2], 1, Concat, [1]]
+  - [-1, 3, C2f, [128, False]]
+
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [[-1, 9], 1, Concat, [1]]
+  - [-1, 3, C2f, [256]]
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 6], 1, Concat, [1]]
+  - [-1, 3, C2f, [512]]
+
+  - [[12, 15, 18], 1, VisDroneDCNDetect, [nc]]

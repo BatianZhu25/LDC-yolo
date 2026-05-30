@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=70.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mkl-yolo"
+version = "0.1.0"
+description = "MKL-YOLO for aerial small-object detection"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "ultralytics>=8.3.0",
+    "numpy>=1.23.0",
+    "pyyaml>=5.3.1",
+    "opencv-python>=4.6.0",
+]
+
+[tool.setuptools]
+packages = { find = { where = ["src"] } }
