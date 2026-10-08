@@ -1,4 +1,4 @@
-"""Train MKL-YOLO with Ultralytics."""
+"""Train LDC-YOLO with Ultralytics."""
 
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ import yaml
 from ultralytics import YOLO
 from ultralytics.utils.torch_utils import init_seeds
 
-import mkl_yolo.register  # noqa: F401
+import ldc_yolo.register  # noqa: F401
+from ldc_yolo.trainer import LDCDetectionTrainer
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train MKL-YOLO")
+    parser = argparse.ArgumentParser(description="Train LDC-YOLO")
     parser.add_argument("--config", default="configs/train.yaml", help="Path to training YAML config")
     parser.add_argument("--data", default=None, help="Override dataset YAML")
     parser.add_argument("--model", default=None, help="Override model YAML")
@@ -47,7 +48,7 @@ def main() -> None:
 
     init_seeds(0, deterministic=True)
     model = YOLO(cfg.pop("model"))
-    model.train(**cfg)
+    model.train(trainer=LDCDetectionTrainer, **cfg)
 
 
 if __name__ == "__main__":

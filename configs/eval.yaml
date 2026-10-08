@@ -1,4 +1,4 @@
-model: runs/train/mkl_yolo_s/weights/best.pt
+model: runs/train/ldc_yolo_s_visdrone/weights/best.pt
 data: configs/data/visdrone.yaml
 imgsz: 640
 batch: 32

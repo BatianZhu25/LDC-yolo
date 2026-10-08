@@ -1,25 +1,22 @@
-# MKL-YOLO model configuration.
+# LDC-YOLO model configuration.
 #
 # The architecture uses P2/P3/P4 detection heads for dense small-object
 # detection in aerial imagery.
 
-nc: 80
-scale: n
+nc: 10  # VisDrone default; training overrides this from the dataset YAML.
+scale: s
 scales:
   n: [0.33, 0.25, 1024]
   s: [0.33, 0.50, 1024]
-  m: [0.67, 0.75, 768]
-  l: [1.00, 1.00, 512]
-  x: [1.00, 1.25, 512]
 
 backbone:
-  - [-1, 1, ConvStem, [64, 3, 2, 1.0]]
+  - [-1, 1, DLStem, [64, 3, 2, 1.0]]
   - [-1, 1, GhostBottleneckV2, [128, 3, 2]]
-  - [-1, 3, C2f_E, [128, True, 1, 0.5, True]]
+  - [-1, 3, C2fLGDI, [128, True, 1, 0.5, True]]
   - [-1, 1, GhostBottleneckV2, [256, 3, 2]]
   - [-1, 6, C2f, [256, True]]
   - [-1, 1, GhostBottleneckV2, [512, 3, 2]]
-  - [-1, 6, C2f_G, [512, True, [1, 3, 3, 5, 5, 7, 7, 9, 9, 11]]]
+  - [-1, 6, C2fRPMK, [512, True, [1, 3, 5, 7, 9, 11]]]
 
 head:
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]

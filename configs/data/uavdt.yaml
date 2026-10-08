@@ -1,5 +1,7 @@
 # UAVDT dataset config.
 # Update `path` to the local dataset root before training.
+# YOLO labels: zero-based class IDs and normalized xywh. See data/README.md.
+# This layout is a preparation template; exact manuscript split records are pending.
 
 path: /path/to/UAVDT
 train: images/train

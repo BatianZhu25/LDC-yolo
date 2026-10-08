@@ -1,7 +1,7 @@
-model: configs/model/mkl_yolov8s.yaml
+model: configs/model/ldc_yolov8s.yaml
 data: configs/data/visdrone.yaml
-project: logs/train
-name: mkl_yolo_s
+project: runs/train
+name: ldc_yolo_s_visdrone
 
 epochs: 300
 imgsz: 640
@@ -11,12 +11,14 @@ device: 0
 
 pretrained: false
 optimizer: SGD
-lr0: 0.02
+lr0: 0.01
 momentum: 0.937
 weight_decay: 0.0005
-patience: 50
+patience: 300
 nbs: 32
 amp: false
 close_mosaic: 10
 mosaic: 0.3
 mixup: 0.3
+
+cos_lr: true

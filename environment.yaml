@@ -1,4 +1,4 @@
-name: mkl-yolo
+name: ldc-yolo
 
 channels:
   - pytorch
@@ -8,15 +8,15 @@ channels:
 
 dependencies:
   - python=3.10
-  - pytorch=2.*
-  - torchvision=0.*
+  - pytorch>=2.0,<2.6
+  - torchvision>=0.15,<0.21
   - pytorch-cuda=11.8
   - numpy
   - pyyaml
   - opencv
   - pip>=23
   - pip:
-      - ultralytics>=8.3.0
+      - ultralytics==8.3.0
       - rich
       - pytest
       - pre-commit

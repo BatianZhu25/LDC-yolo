@@ -1,4 +1,4 @@
 # Example experiment override.
-model: configs/model/mkl_yolov8s.yaml
+model: configs/model/ldc_yolov8s.yaml
 data: configs/data/visdrone.yaml
-name: mkl_yolo_s_visdrone
+name: ldc_yolo_s_visdrone

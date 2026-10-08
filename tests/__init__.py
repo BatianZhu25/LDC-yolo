@@ -1,1 +1,1 @@
-"""MKL-YOLO tests."""
+"""LDC-YOLO tests."""

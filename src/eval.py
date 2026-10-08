@@ -1,4 +1,4 @@
-"""Evaluate MKL-YOLO checkpoints."""
+"""Evaluate LDC-YOLO checkpoints."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from pathlib import Path
 import yaml
 from ultralytics import YOLO
 
-import mkl_yolo.register  # noqa: F401
+import ldc_yolo.register  # noqa: F401
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Evaluate MKL-YOLO")
+    parser = argparse.ArgumentParser(description="Evaluate LDC-YOLO")
     parser.add_argument("--config", default="configs/eval.yaml", help="Path to evaluation YAML config")
     parser.add_argument("--model", default=None, help="Override checkpoint path")
     parser.add_argument("--data", default=None, help="Override dataset YAML")

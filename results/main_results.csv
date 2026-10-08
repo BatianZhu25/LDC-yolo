@@ -1,0 +1,15 @@
+dataset,method,ap50_percent,ap50_95_percent,parameters_m,flops_g,source
+VisDrone2019-DET,YOLOv8-n,34.10,20.00,3.15,8.746,manuscript
+VisDrone2019-DET,YOLOv8-s,40.10,24.20,11.16,28.608,manuscript
+VisDrone2019-DET,YOLOv10-n,33.00,19.70,2.30,6.698,manuscript
+VisDrone2019-DET,YOLO11-s,40.75,24.70,9.44,21.472,manuscript
+VisDrone2019-DET,YOLO11-m,46.40,28.90,20.09,67.990,manuscript
+VisDrone2019-DET,LEAF-YOLO-S,48.30,28.20,4.28,20.900,published_comparison_in_manuscript
+VisDrone2019-DET,RemDet-L,47.40,29.30,35.30,67.400,published_comparison_in_manuscript
+VisDrone2019-DET,LDC-YOLO-N,41.00,25.00,1.15,8.214,manuscript
+VisDrone2019-DET,LDC-YOLO-S,49.30,30.83,3.56,26.634,manuscript
+UAVDT,YOLOv5-s,50.10,29.80,7.24,24.400,manuscript
+UAVDT,YOLOv8-s,49.50,29.20,11.16,28.608,manuscript
+UAVDT,YOLOv10-s,50.50,30.70,7.16,21.600,manuscript
+UAVDT,YOLO11-s,49.30,29.40,9.44,21.472,manuscript
+UAVDT,LDC-YOLO-S,55.40,34.90,3.56,26.634,manuscript

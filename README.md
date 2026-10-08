@@ -1,192 +1,113 @@
-______________________________________________________________________
-
 <div align="center">
 
-# MKL-YOLO
+# LDC-YOLO
+### A Compact Detector for Small Objects in UAV Imagery
 
-<a href="https://pytorch.org/get-started/locally/">
-  <img alt="PyTorch" src="https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white">
-</a>
-<a href="https://docs.ultralytics.com/">
-  <img alt="Ultralytics" src="https://img.shields.io/badge/Ultralytics-YOLO-111F68">
-</a>
-<a href="./LICENSE">
-  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green">
-</a>
+[![PyTorch](https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![Ultralytics](https://img.shields.io/badge/Ultralytics-8.3.0-111F68)](https://docs.ultralytics.com/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+**Laplacian-guided Detail and Context enhancement for UAV object detection**
 
 </div>
 
----
+LDC-YOLO combines shallow detail modulation and deep context aggregation in a compact **P2–P4** detector. This first release aligns the previous MKL-YOLO repository with the latest manuscript's terminology, module definitions, training protocol and reported results.
 
-## Abstract
+## Architecture
 
-MKL-YOLO is a lightweight object detector for aerial small-object detection. The model uses a P2/P3/P4 detection head, lightweight GhostNetV2-style downsampling blocks, an edge-enhanced C2f block, a multi-kernel re-parameterizable C2f block, and a DCN-enhanced detection head. Experiments are conducted on VisDrone and UAVDT under a 300-epoch training setting.
+![LDC-YOLO architecture](assets/architecture.png)
 
----
+- **DL-Stem** projects features with a stride-1 3×3 convolution before stride-2 downsampling.
+- **LGDI at P2** uses a fixed eight-neighbour Laplacian (centre 8, neighbours −1), BN and `tanh(abs(G))` to modulate features as `X * (1 + M)` before depthwise/pointwise refinement.
+- **RPMK-RepViT at P4** uses successive `{1, 3}` and `{1, 3, 5, 7, 9, 11}` depthwise stages. Each stage fuses separately to a 3×3 or 11×11 convolution; SE and residual feed-forward refinement remain.
+- **P2/P3/P4 heads** predict at strides 4/8/16, supported by GhostNetV2 downsampling, DCNv2 heads and WIoU regression.
+
+## Paper results
+
+Values below are **reported in the manuscript**, not measurements from a new training run in this release. AP values are percentages; complexity is reported at 640×640.
+
+| Dataset | Model | AP50 | AP50:95 | Parameters (M) | FLOPs (G) |
+|---|---|---:|---:|---:|---:|
+| VisDrone2019-DET | LDC-YOLO-N | 41.00 | 25.00 | 1.15 | 8.214 |
+| VisDrone2019-DET | **LDC-YOLO-S** | **49.30** | **30.83** | **3.56** | **26.634** |
+| UAVDT | LDC-YOLO-S | 55.40 | 34.90 | 3.56 | 26.634 |
+
+Full main-comparison and cumulative-ablation tables: [`results/`](results/).
 
 ## Installation
 
-```bash
-# 1. Clone repository
-git clone <your-repo-url>
-cd MKL-yolo
-
-# 2. Create conda environment
-conda env create -f environment.yaml
-conda activate mkl-yolo
-
-# 3. Install the project
-pip install -e .
-```
-
-If you install dependencies with pip only:
+Use Python 3.10 or newer with a compatible PyTorch/torchvision pair.
 
 ```bash
+git clone https://github.com/BatianZhu25/LDC-yolo.git
+cd LDC-yolo
 pip install -r requirements.txt
 pip install -e .
 ```
 
----
+Alternatively, `conda env create -f environment.yaml && conda activate ldc-yolo`, then `pip install -e .`. Ultralytics is pinned to **8.3.0** for custom model parsing. DCNv2 requires working torchvision deformable-convolution operators.
 
-## Dataset Configuration
+## Data preparation
 
-### 1. Dataset Config Files Location
+See [`data/README.md`](data/README.md) for sources, class mappings and directory layout. Set the local dataset root in `configs/data/visdrone.yaml` or `configs/data/uavdt.yaml`. Images and labels are downloaded from the original dataset providers.
 
-```text
-configs/data/
-├── visdrone.yaml
-└── uavdt.yaml
+VisDrone annotation conversion:
+
+```bash
+python scripts/prepare_visdrone.py --source /path/to/VisDrone2019-DET-train --output /path/to/VisDrone --split train
+python scripts/prepare_visdrone.py --source /path/to/VisDrone2019-DET-val --output /path/to/VisDrone --split val
 ```
-
-### 2. Modify Dataset Path
-
-Edit the dataset config before training:
-
-```yaml
-# Example: configs/data/visdrone.yaml
-path: /path/to/VisDrone
-train: images/train
-val: images/val
-test: images/test
-```
-
----
 
 ## Training
 
-Train MKL-YOLO-S on VisDrone:
+The manuscript uses separate training on VisDrone and UAVDT: **640×640**, **300 epochs**, **SGD**, initial learning rate **0.01**, cosine decay, momentum **0.937**, weight decay **0.0005**, batch size **32**, and eight RTX 2080 Ti GPUs. The launch configuration defaults to one GPU; select devices to suit your machine.
 
 ```bash
-bash scripts/train_visdrone.sh
+# LDC-YOLO-S on VisDrone
+python src/train.py --data configs/data/visdrone.yaml --name ldc_yolo_s_visdrone
+
+# LDC-YOLO-N on VisDrone
+python src/train.py --model configs/model/ldc_yolov8n.yaml --data configs/data/visdrone.yaml --name ldc_yolo_n_visdrone
+
+# LDC-YOLO-S on UAVDT
+python src/train.py --data configs/data/uavdt.yaml --name ldc_yolo_s_uavdt
+
+# Multiple GPUs (batch is the total batch size in this implementation)
+python src/train.py --device 0,1,2,3,4,5,6,7 --name ldc_yolo_s_visdrone
 ```
 
-Train MKL-YOLO-S on UAVDT:
+The first-release loss uses **WIoU-v1** with the upstream DFL term. Augmentation strengths and initialization defaults are editable in `configs/train.yaml`.
+
+## Evaluation and export
 
 ```bash
-bash scripts/train_uavdt.sh
+python src/eval.py --model runs/train/ldc_yolo_s_visdrone/weights/best.pt --data configs/data/visdrone.yaml
+python src/export.py --weights runs/train/ldc_yolo_s_visdrone/weights/best.pt --format onnx --fuse-reparam
 ```
 
-Equivalent Python entry:
+Evaluation defaults to the validation split. Re-parameterization requires evaluation mode and frozen BN statistics. Export with DCNv2 depends on the selected backend's operator support.
 
-```bash
-python src/train.py \
-  --config configs/train.yaml \
-  --data configs/data/visdrone.yaml \
-  --name mkl_yolo_s_visdrone
-```
+## Qualitative examples
 
----
+![VisDrone detection and activation examples from the manuscript](assets/qualitative.jpg)
 
-## Evaluation
-
-```bash
-python src/eval.py \
-  --config configs/eval.yaml \
-  --model runs/train/mkl_yolo_s_visdrone/weights/best.pt \
-  --data configs/data/visdrone.yaml
-```
-
----
-
-## Model Configuration
-
-The released full model configs are:
+## Repository
 
 ```text
-configs/model/mkl_yolov8n.yaml
-configs/model/mkl_yolov8s.yaml
+configs/             Model, dataset and training settings
+src/ldc_yolo/        DL-Stem, LGDI, RPMK-RepViT, DCNv2 and WIoU trainer
+src/{train,eval,export}.py
+scripts/             Training launchers and VisDrone conversion
+results/             Manuscript comparison and ablation tables
+assets/              Manuscript architecture and qualitative examples
 ```
 
-The original development name of this config was `EGF_head_yolov8.yaml`; the released project uses the final paper name MKL-YOLO.
-
----
-
-## Results
-
-### VisDrone
-
-| Method | Epochs | AP50 | AP50:95 | Params | FLOPs | Latency fp16 |
-|---|---:|---:|---:|---:|---:|---:|
-| YOLOv5-nu (2020) | 300 | 33.8 | 19.7 | 2.65M | 7.7G | 1.15ms |
-| YOLOv5-su (2020) | 300 | 40.2 | 24.2 | 9.14M | 24.0G | 1.28ms |
-| YOLOv5-mu (2020) | 300 | 44.3 | 27.3 | 25.10M | 64.2G | 2.45ms |
-| YOLOv8-n (2023) | 300 | 34.1 | 20.0 | 3.15M | 8.7G | 0.98ms |
-| YOLOv8-s (2023) | 300 | 40.1 | 24.2 | 11.16M | 28.6G | 1.45ms |
-| YOLOv8-m (2023) | 300 | 45.0 | 27.9 | 25.89M | 78.9G | 3.07ms |
-| YOLOv10-n (2024) | 300 | 33.0 | 19.7 | 2.30M | 6.7G | 1.49ms |
-| YOLOv10-s (2024) | 300 | 40.5 | 24.8 | 7.25M | 21.6G | 1.63ms |
-| YOLOv10-m (2024) | 300 | 44.2 | 27.6 | 15.36M | 59.1G | 3.08ms |
-| YOLO11-n (2024) | 300 | 33.4 | 19.7 | 2.62M | 6.5G | 1.10ms |
-| YOLO11-s (2024) | 300 | 40.8 | 24.7 | 9.44M | 21.5G | 1.59ms |
-| YOLO11-m (2024) | 300 | 46.4 | 28.9 | 20.09M | 68.0G | 2.76ms |
-| FBRT-YOLO-N dagger (2025) | 300 | 34.4 | 20.2 | 0.9M | 6.7G | -- |
-| FBRT-YOLO-S dagger (2025) | 300 | 42.4 | 25.9 | 2.9M | 22.9G | -- |
-| FBRT-YOLO-M dagger (2025) | 300 | 45.9 | 28.4 | 7.2M | 58.7G | -- |
-| LEAF-YOLO-N dagger (2025) | 800 | 39.7 | 21.9 | 1.2M | 5.6G | 2.54ms |
-| LEAF-YOLO-S dagger (2025) | 800 | 48.3 | 28.2 | 4.28M | 20.9G | 3.01ms |
-| LMFF-MFFE dagger (2025) | 200 | 44.5 | 27.2 | 8.8M | 41.7G | -- |
-| RemDet-S dagger (2025) | 300 | 41.5 | 24.7 | 16.0M | 40.5G | 2.38ms |
-| RemDet-M dagger (2025) | 300 | 44.7 | 27.3 | 29.5M | 89.7G | 3.86ms |
-| RemDet-L dagger (2025) | 300 | 47.4 | 29.3 | 42.3M | 160.4G | 5.30ms |
-| RT-DETR-R34 dagger (2024) | 300 | 46.0 | 27.2 | 31.0M | 92.0G | -- |
-| RT-DETR-R50 dagger (2024) | 300 | 48.3 | 28.8 | 42.0M | 136.0G | -- |
-| MKL-YOLO-N (Ours) | 300 | 40.1 | 24.5 | 1.33M | 10.3G | 2.01ms |
-| **MKL-YOLO-S (Ours)** | 300 | **49.3** | **30.8** | 3.40M | 29.6G | 3.43ms |
-
-Daggered entries are reported results from the corresponding publications or their reported comparisons, whereas the remaining entries follow the 300-epoch setting.
-
-### UAVDT
-
-| Method | AP50 (%) | AP50:95 (%) |
-|---|---:|---:|
-| YOLOv5-s | 50.1 | 29.8 |
-| YOLOv8-s | 49.5 | 29.2 |
-| YOLOv10-s | 50.5 | 30.7 |
-| YOLO11-s | 49.3 | 29.4 |
-| **MKL-YOLO-S (Ours)** | **55.4** | **34.9** |
-
----
-
-## References
-
-This project is implemented on top of Ultralytics YOLO and uses modules inspired by lightweight detection and aerial small-object detection research.
-
----
+**First-release status.** This repository includes paper-aligned modules and runnable model configurations. The original training checkpoints, exact UAVDT sequence split and complete training records will be added later. Configuration widths/depths are inherited from the earlier code and still require confirmation against the final experimental checkpoints; the reported parameter/FLOP values above are not asserted as verified profiles of these configurations. The manuscript does not identify the WIoU variant, so this release explicitly uses v1. Previous `mkl_yolo` import paths are retained for compatibility.
 
 ## Citation
 
-Citation information will be released after the paper metadata is finalized.
-
-```bibtex
-@misc{mkl_yolo,
-  title  = {MKL-YOLO},
-  author = {},
-  year   = {},
-}
-```
-
----
+Manuscript: **LDC-YOLO: A Compact Detector for Small Objects in UAV Imagery**, Qiuming Luo, Tingfeng Luo, Haigang Zhang and Chang Kong. Publication metadata will be added when available.
 
 ## License
 
-This project is licensed under the MIT License.
+The repository retains its existing [MIT license](LICENSE). Ultralytics and the datasets have their own licenses and terms.

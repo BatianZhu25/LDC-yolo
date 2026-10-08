@@ -3,12 +3,12 @@ from pathlib import Path
 import yaml
 
 
-def test_model_config_contains_mkl_modules():
-    cfg_path = Path("configs/model/mkl_yolov8s.yaml")
+def test_model_config_contains_ldc_modules():
+    cfg_path = Path("configs/model/ldc_yolov8s.yaml")
     cfg = yaml.safe_load(cfg_path.read_text())
     layers = cfg["backbone"] + cfg["head"]
     module_names = {layer[2] for layer in layers}
-    assert {"ConvStem", "GhostBottleneckV2", "C2f_E", "C2f_G", "VisDroneDCNDetect"} <= module_names
+    assert {"DLStem", "GhostBottleneckV2", "C2fLGDI", "C2fRPMK", "VisDroneDCNDetect"} <= module_names
 
 
 def test_dataset_configs_have_names():

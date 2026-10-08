@@ -18,8 +18,8 @@ format: ## Run pre-commit hooks
 test: ## Run tests
 	pytest
 
-train: ## Train MKL-YOLO
+train: ## Train LDC-YOLO
 	python src/train.py
 
-eval: ## Evaluate MKL-YOLO
+eval: ## Evaluate LDC-YOLO
 	python src/eval.py

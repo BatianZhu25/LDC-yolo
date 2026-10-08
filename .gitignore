@@ -14,3 +14,8 @@ datasets/
 *.pth
 *.onnx
 *.engine
+
+.venv/
+*.egg-info/
+build/
+dist/
